@@ -1,4 +1,5 @@
 #Tkinter to create windows application
+from math import nextafter
 from tkinter import *
 #OS to open files and folders
 import os
@@ -358,6 +359,18 @@ def toA2(x,y):
     b = lbv[y]
     return  str(a) + str(b) 
 
+
+#Check if there's a piece in the selected coord, return 0 for enemy, return 1 for allied, return -1 for none
+def checkCoord(x, y, color):
+    coordA2 = toA2(x,y)
+    if (coordA2 in pieceLoc) and (pieceLoc[coordA2][1] == color):
+        return 1
+    elif (coordA2 in pieceLoc) and (pieceLoc[coordA2][1] != color):
+        return 0
+    else:
+        return -1
+
+
 #Create a green selection over the possible movements of the piece selected
 def clickPiece(pie, pos):  
     pieceObj = piece[pieceLoc[pos][0]]
@@ -366,22 +379,19 @@ def clickPiece(pie, pos):
     i = 0
     while i < len(mov):
         j = 0
-        print(mov[i], 'i', i)   
         boardXY = conv_xy(pos)  
         while j < len(mov[i]):
-            print(mov[i][j], 'j', j)
             if (pieceColor == 'white'):
                 mov2 = mov[i][j][0] * -1
             else:
                 mov2 = mov[i][j][0]
-            print(mov2)
             if (mov[i][j][1] == 'x'):
                 boardXY[0] += mov2
             if (mov[i][j][1] == 'y'):
                 boardXY[1] += mov2
+            #Cancel if out of bounds
             if (boardXY[0] <= 0) or (boardXY[1] <= 0) or (boardXY[0] >= 9) or (boardXY[1] >= 9):
                 break
-            print(boardXY)
             #Movement based on piece
             if     (pie == 'bishop' and (j%2 != 0)) \
                 or (pie == 'pawn' and (len(mov[i]) == 1)) \
@@ -391,12 +401,22 @@ def clickPiece(pie, pos):
                 or ((pie == 'queen') and ((j%2 != 0) \
                     or (j <= 1) \
                     or ((mov[i][j-1][1] == 'x') and (mov[i][j][1] == 'x') \
-                    or ((mov[i][j-1][1] == 'y') and (mov[i][j][1] == 'y'))))):                                    
-                posA2 = toA2(boardXY[0], boardXY[1])
-                locBut = Button(root, bg='#5cfa86', borderwidth=0, command=lambda p=posA2, l=pos, t=pie, c=pieceColor: movePiece(p, l, t, c), image=squareImg, height=100, width=100)
-                locBut.grid(column=boardXY[0], row=boardXY[1])                    
+                    or ((mov[i][j-1][1] == 'y') and (mov[i][j][1] == 'y'))))):
+                if (checkCoord(boardXY[0], boardXY[1], pieceColor) == -1):                                    
+                    posA2 = toA2(boardXY[0], boardXY[1])
+                    locBut = Button(root, bg='#5cfa86', borderwidth=0, command=lambda p=posA2, l=pos, t=pie, c=pieceColor: movePiece(p, l, t, c), image=squareImg, height=100, width=100)
+                    locBut.grid(column=boardXY[0], row=boardXY[1])
+                    
+                elif (checkCoord(boardXY[0], boardXY[1], pieceColor) == 0):                 
+                    posA2 = toA2(boardXY[0], boardXY[1])
+                    locBut = Button(root, bg='#c2492b', borderwidth=0, command=lambda p=posA2, l=pos, t=pie, c=pieceColor: movePiece(p, l, t, c), image=squareImg, height=100, width=100)
+                    locBut.grid(column=boardXY[0], row=boardXY[1])
+                    break #prob here
+                else:
+                    pass
             j += 1
         i += 1
+
 
 
 #Move the piece to location
